@@ -478,6 +478,18 @@ void sol_coap_header_set_id(struct sol_coap_packet *pkt, uint16_t id);
 struct sol_coap_server *sol_coap_server_new(const struct sol_network_link_addr *addr);
 
 /**
+ * @brief Creates a new CoAP server instance.
+ *
+ * Creates a new, unsecured, CoAP server instance for bluetooth devices.
+ * If the server cannot be created, NULL will be returned and errno will be
+ * set to indicate the reason.
+ *
+ * @return A new server instance, or NULL in case of failure.
+ *
+ */
+struct sol_coap_server *sol_coap_server_ble_new_full();
+
+/**
  * @brief Creates a new secure CoAP server instance.
  *
  * Creates a new, unsecured, CoAP server instance listening on address

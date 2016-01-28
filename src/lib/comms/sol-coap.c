@@ -1478,6 +1478,54 @@ network_event(void *data, const struct sol_network_link *link, enum sol_network_
     join_mcast_groups(server->socket, link);
 }
 
+SOL_API struct sol_coap_server *
+sol_coap_server_ble_new_full(void)
+{
+
+    struct sol_network_link_addr servaddr = { .family = AF_BT_IOTIVITY,
+                                              .port = 0 };
+    const struct sol_vector *links;
+    struct sol_network_link *link;
+    struct sol_coap_server *server;
+    struct sol_socket *s;
+    uint16_t i;
+
+    SOL_LOG_INTERNAL_INIT_ONCE;
+
+    s = sol_socket_new(servaddr.family, 0, 0);
+    if (!s) {
+        SOL_WRN("Could not create socket (%d): %s", errno, sol_util_strerrora(errno));
+        return NULL;
+    }
+
+    if (sol_socket_bind(s, &servaddr) < 0) {
+        SOL_WRN("Could not bind socket (%d): %s", errno, sol_util_strerrora(errno));
+        sol_socket_del(s);
+        return NULL;
+    }
+
+    server = calloc(1, sizeof(*server));
+    if (!server) {
+        sol_socket_del(s);
+        return NULL;
+    }
+
+    server->refcnt = 1;
+
+    sol_vector_init(&server->contexts, sizeof(struct resource_context));
+
+    sol_ptr_vector_init(&server->pending);
+    sol_ptr_vector_init(&server->outgoing);
+
+    server->socket = s;
+    if (sol_socket_set_on_read(s, on_can_read, server) < 0) {
+        free(server);
+        sol_socket_del(s);
+        return NULL;
+    }
+    return server;
+}
+
 static struct sol_coap_server *
 sol_coap_server_new_full(enum sol_socket_type type, const struct sol_network_link_addr *servaddr)
 {
